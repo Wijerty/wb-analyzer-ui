@@ -8,7 +8,6 @@ import traceback
 from typing import Dict, List, Optional, Union, Any
 from datetime import datetime
 
-# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,9 +20,8 @@ logger = logging.getLogger(__name__)
 
 logger.info("Starting WB Analyzer API server")
 
-# Настройка matplotlib перед импортом модуля ML
 import matplotlib
-matplotlib.use('Agg')  # Не-интерактивный бэкенд без GUI
+matplotlib.use('Agg') 
 
 import cv2
 import numpy as np
@@ -33,19 +31,14 @@ from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-# Импортируем класс модели из существующего скрипта
-# Добавляем корневую директорию проекта к путям поиска модулей
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# Импортируем из файла test.py в корневой директории
 from ml.test import ObjectDetector, SSLModel
 
 app = Flask(__name__, static_folder='build')
-CORS(app)  # Разрешаем кросс-доменные запросы
+CORS(app) 
 
-# Добавляем обработчик для CORS preflight запросов
 @app.route('/api/results/<result_id>', methods=['OPTIONS'])
 def options_results(result_id):
-    """Обработчик для CORS preflight запросов."""
     response = jsonify({})
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
@@ -53,29 +46,25 @@ def options_results(result_id):
     response.headers['Access-Control-Max-Age'] = '3600'
     return response
 
-# Конфигурация
+
 MODEL_PATH = './models/ssl_model_epoch_80.pth'
 UPLOAD_FOLDER = 'uploads'
 RESULTS_FOLDER = 'api_results'
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'avi', 'mov', 'webm'}
 ALLOWED_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp'}
 
-# Создаем директории, если они не существуют
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER, 'videos'), exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER, 'images'), exist_ok=True)
 
-# Хранилище результатов (в реальном приложении это должна быть БД)
 analysis_results = {}
 
 def allowed_file(filename: str, allowed_extensions: set) -> bool:
-    """Проверяет, допустимо ли расширение файла."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_video():
-    """Обработка запроса на анализ видео."""
     if 'video' not in request.files:
         return jsonify({'error': 'Видео не найдено в запросе'}), 400
     
@@ -83,22 +72,18 @@ def analyze_video():
     if not video_file or not allowed_file(video_file.filename, ALLOWED_VIDEO_EXTENSIONS):
         return jsonify({'error': 'Недопустимый формат видео'}), 400
     
-    # Сохраняем видео
     analysis_id = str(uuid.uuid4())
     os.makedirs(os.path.join(RESULTS_FOLDER, analysis_id), exist_ok=True)
     
     video_filename = secure_filename(video_file.filename)
     video_path = os.path.join(UPLOAD_FOLDER, 'videos', f"{analysis_id}_{video_filename}")
     video_file.save(video_path)
-    
-    # Получаем параметры анализа
+
     threshold = float(request.form.get('threshold', 0.85))
     sample_rate = int(request.form.get('sample_rate', 10))
-    
-    # Собираем информацию о товарах
+
     products = {}
-    
-    # Перебираем все файлы с изображениями товаров
+
     for key in request.files:
         if key.startswith('product_image_'):
             parts = key.split('_')
@@ -110,16 +95,13 @@ def analyze_video():
                 if product_image and allowed_file(product_image.filename, ALLOWED_IMAGE_EXTENSIONS):
                     image_filename = secure_filename(product_image.filename)
                     product_id = f"product_{product_index}"
-                    
-                    # Создаем директорию для изображений товара
+
                     product_images_dir = os.path.join(UPLOAD_FOLDER, 'images', f"{analysis_id}_{product_id}")
                     os.makedirs(product_images_dir, exist_ok=True)
                     
-                    # Сохраняем изображение
                     image_path = os.path.join(product_images_dir, f"image_{image_index}_{image_filename}")
                     product_image.save(image_path)
-                    
-                    # Добавляем или обновляем информацию о товаре
+
                     if product_id not in products:
                         products[product_id] = {
                             'id': product_id,
@@ -129,34 +111,26 @@ def analyze_video():
                     
                     products[product_id]['image_paths'].append(image_path)
     
-    # Преобразуем словарь в список
     product_list = list(products.values())
     
     if not product_list:
         return jsonify({'error': 'Не найдено изображений товаров для анализа'}), 400
     
     try:
-        # Инициализируем детектор объектов
         detector = ObjectDetector(MODEL_PATH)
         
-        # Анализируем наличие каждого товара на видео
         results = []
         video_duration = 0
         
         for product in product_list:
-            # Путь к результатам для этого товара
             product_result_dir = os.path.join(RESULTS_FOLDER, analysis_id, product['id'])
             os.makedirs(product_result_dir, exist_ok=True)
             
-            # Путь к выходному видео (опционально)
             output_video_path = os.path.join(product_result_dir, f"result_{product['id']}.mp4")
             
-            # Создаем график для визуализации
             chart_path = os.path.join(product_result_dir, f"chart_{product['id']}.png")
             
-            # Анализируем видео для этого товара
             try:
-                # Анализируем видео для текущего товара с использованием всех изображений
                 frames, similarity_scores, matches = detector.visualize_results_multi_image(
                     video_path=video_path,
                     target_image_paths=product['image_paths'],
@@ -165,18 +139,14 @@ def analyze_video():
                     sample_rate=sample_rate
                 )
                 
-                # Проверяем, найден ли товар
-                # Товар найден, если есть хотя бы одно совпадение выше порога
                 detected = len(matches) > 0
                 
-                # Дополнительная проверка: если объект matches пустой, но есть значения сходства выше порога
                 if not detected and similarity_scores:
                     max_similarity = max(similarity_scores)
                     if max_similarity >= threshold:
                         detected = True
                         print(f"Товар {product['name']} обнаружен по максимальному значению сходства: {max_similarity}")
                 
-                # Получаем длительность видео, если еще не получили
                 if video_duration == 0:
                     cap = cv2.VideoCapture(video_path)
                     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -184,17 +154,14 @@ def analyze_video():
                     video_duration = int(total_frames / fps)
                     cap.release()
                 
-                # Создаем массив для хранения путей к изображениям товара
                 product_image_urls = []
                 
-                # Копируем все изображения товара в папку результатов
                 for i, img_path in enumerate(product['image_paths']):
                     dest_path = os.path.join(product_result_dir, f"product_image_{i}.jpg")
                     image = Image.open(img_path)
                     image.save(dest_path)
                     product_image_urls.append(f"/static/{analysis_id}/{product['id']}/product_image_{i}.jpg")
                 
-                # Создаем объект результата анализа
                 product_result = {
                     'id': product['id'],
                     'productName': product['name'],
@@ -208,7 +175,6 @@ def analyze_video():
                 
                 results.append(product_result)
                 
-                # Сохраняем копию графика для сводной страницы
                 summary_dest_path = os.path.join(RESULTS_FOLDER, analysis_id, f"chart_{product['id']}.png")
                 shutil.copy(chart_path, summary_dest_path)
                 
@@ -219,7 +185,6 @@ def analyze_video():
                 logger.error(error_message)
                 logger.error(traceback.format_exc())
                 
-                # Добавляем информацию об ошибке в результаты
                 product_result = {
                     'id': product['id'],
                     'productName': product['name'],
@@ -227,7 +192,6 @@ def analyze_video():
                 }
                 results.append(product_result)
         
-        # Создаем объект с результатами анализа
         analysis_result = {
             'id': analysis_id,
             'timestamp': datetime.now().isoformat(),
@@ -239,15 +203,12 @@ def analyze_video():
             'products': results
         }
         
-        # Сохраняем результаты в "базу данных"
         analysis_results[analysis_id] = analysis_result
         
-        # Сохраняем результаты в JSON-файл для постоянного хранения
         result_json_path = os.path.join(RESULTS_FOLDER, analysis_id, 'result.json')
         with open(result_json_path, 'w', encoding='utf-8') as f:
             json.dump(analysis_result, f, ensure_ascii=False, indent=2)
         
-        # Формируем сокращенный ответ для клиента
         client_response = {
             'analysisId': analysis_id,
             'message': f'Анализ видео завершен. Проанализировано {len(results)} товаров.',
@@ -262,7 +223,6 @@ def analyze_video():
         logger.error(error_message)
         logger.error(traceback.format_exc())
         
-        # Удаляем временные файлы и директории
         try:
             if os.path.exists(video_path):
                 os.remove(video_path)
@@ -278,19 +238,15 @@ def analyze_video():
 
 @app.route('/api/results/<result_id>', methods=['GET'])
 def get_result(result_id):
-    """Получение результатов анализа по ID."""
-    # Сначала проверяем кэш
     if result_id in analysis_results:
         return jsonify(analysis_results[result_id]), 200
     
-    # Если нет в кэше, ищем сохраненный JSON
     result_json_path = os.path.join(RESULTS_FOLDER, result_id, 'result.json')
     if os.path.exists(result_json_path):
         try:
             with open(result_json_path, 'r', encoding='utf-8') as f:
                 result_data = json.load(f)
                 
-                # Кэшируем результат
                 analysis_results[result_id] = result_data
                 
                 return jsonify(result_data), 200
@@ -303,25 +259,20 @@ def get_result(result_id):
 
 @app.route('/api/cancel-analysis/<analysis_id>', methods=['POST'])
 def cancel_analysis(analysis_id):
-    """Отмена анализа и удаление всех связанных файлов."""
     try:
-        # Удаляем видео
         video_pattern = f"{analysis_id}_*"
         for file in os.listdir(os.path.join(UPLOAD_FOLDER, 'videos')):
             if file.startswith(f"{analysis_id}_"):
                 os.remove(os.path.join(UPLOAD_FOLDER, 'videos', file))
         
-        # Удаляем директории с изображениями
         for dir_name in os.listdir(os.path.join(UPLOAD_FOLDER, 'images')):
             if dir_name.startswith(f"{analysis_id}_"):
                 shutil.rmtree(os.path.join(UPLOAD_FOLDER, 'images', dir_name))
         
-        # Удаляем результаты
         result_dir = os.path.join(RESULTS_FOLDER, analysis_id)
         if os.path.exists(result_dir):
             shutil.rmtree(result_dir)
         
-        # Удаляем из кэша
         if analysis_id in analysis_results:
             del analysis_results[analysis_id]
         
@@ -333,14 +284,11 @@ def cancel_analysis(analysis_id):
 
 @app.route('/api/results', methods=['GET'])
 def get_results():
-    """Получение списка всех проведенных анализов."""
     all_results = []
     
-    # Перебираем все директории в RESULTS_FOLDER
     for result_id in os.listdir(RESULTS_FOLDER):
         result_json_path = os.path.join(RESULTS_FOLDER, result_id, 'result.json')
         
-        # Пропускаем файлы и .gitkeep
         if not os.path.isdir(os.path.join(RESULTS_FOLDER, result_id)) or result_id == '.gitkeep':
             continue
             
@@ -349,7 +297,6 @@ def get_results():
                 with open(result_json_path, 'r', encoding='utf-8') as f:
                     result_data = json.load(f)
                     
-                    # Добавляем только основную информацию
                     summary = {
                         'id': result_data.get('id'),
                         'timestamp': result_data.get('timestamp'),
@@ -361,31 +308,24 @@ def get_results():
             except Exception as e:
                 logger.error(f"Ошибка при чтении данных анализа {result_id}: {str(e)}")
     
-    # Сортируем по дате (сначала новые)
     all_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
     
     return jsonify(all_results), 200
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
-    """Обработчик для статических файлов результатов."""
-    # Проверяем, содержит ли путь ID анализа
     parts = filename.split('/')
     if len(parts) >= 1:
         analysis_id = parts[0]
-        # Проверяем, есть ли поддиректория продукта
         if len(parts) >= 2:
             product_id = parts[1]
-            # Проверяем, запрашивается ли файл продукта
             if len(parts) >= 3:
                 file_path = '/'.join(parts[2:])
-                # Файл является частью результата для конкретного продукта
                 return send_from_directory(
                     os.path.join(RESULTS_FOLDER, analysis_id, product_id),
                     file_path
                 )
         
-        # Файл является частью общих результатов
         file_path = '/'.join(parts[1:])
         return send_from_directory(
             os.path.join(RESULTS_FOLDER, analysis_id),
@@ -396,10 +336,8 @@ def serve_static(filename):
 
 @app.route('/api/is-model-available', methods=['GET'])
 def is_model_available():
-    """Проверка наличия модели."""
     if os.path.exists(MODEL_PATH):
         try:
-            # Проверяем, что файл имеет минимальный размер, чтобы быть моделью
             if os.path.getsize(MODEL_PATH) > 1000000:  # 1MB
                 return jsonify({
                     'available': True, 
@@ -426,7 +364,6 @@ def is_model_available():
 
 @app.route('/api/system-info', methods=['GET'])
 def system_info():
-    """Информация о системе и доступных ресурсах."""
     try:
         info = {
             'python_version': sys.version,
@@ -448,9 +385,7 @@ def system_info():
 
 @app.route('/video/<path:video_id>')
 def serve_video(video_id):
-    """Обслуживание видеофайлов."""
     try:
-        # Ищем видеофайл по ID анализа
         video_dir = os.path.join(UPLOAD_FOLDER, 'videos')
         for file in os.listdir(video_dir):
             if file.startswith(f"{video_id}_"):
@@ -462,7 +397,6 @@ def serve_video(video_id):
 
 @app.route('/api/upload-temp-image', methods=['POST'])
 def upload_temp_image():
-    """Временная загрузка изображения для предпросмотра."""
     if 'image' not in request.files:
         return jsonify({'error': 'Изображение не найдено в запросе'}), 400
     
@@ -470,19 +404,15 @@ def upload_temp_image():
     if not image_file or not allowed_file(image_file.filename, ALLOWED_IMAGE_EXTENSIONS):
         return jsonify({'error': 'Недопустимый формат изображения'}), 400
     
-    # Генерируем уникальный ID для временного файла
     temp_id = str(uuid.uuid4())
     
-    # Создаем директорию для временных файлов, если её нет
     temp_dir = os.path.join(UPLOAD_FOLDER, 'temp')
     os.makedirs(temp_dir, exist_ok=True)
     
-    # Сохраняем изображение
     filename = secure_filename(image_file.filename)
     temp_path = os.path.join(temp_dir, f"{temp_id}_{filename}")
     image_file.save(temp_path)
     
-    # Возвращаем путь к файлу для предпросмотра
     return jsonify({
         'tempId': temp_id,
         'imageUrl': f"/temp/{temp_id}_{filename}"
@@ -490,15 +420,12 @@ def upload_temp_image():
 
 @app.route('/temp/<path:filename>')
 def serve_temp_file(filename):
-    """Обслуживание временных файлов."""
     temp_dir = os.path.join(UPLOAD_FOLDER, 'temp')
     return send_from_directory(temp_dir, filename)
 
 @app.route('/api/analyze-test', methods=['POST'])
 def analyze_test():
-    """Тестовый эндпоинт для проверки загрузки файлов без запуска анализа."""
     try:
-        # Проверяем наличие видео
         if 'video' not in request.files:
             return jsonify({'error': 'Видео не найдено в запросе'}), 400
         
@@ -506,7 +433,6 @@ def analyze_test():
         if not video_file or not allowed_file(video_file.filename, ALLOWED_VIDEO_EXTENSIONS):
             return jsonify({'error': 'Недопустимый формат видео'}), 400
         
-        # Подсчитываем количество товаров
         product_count = 0
         product_images_count = 0
         
@@ -518,7 +444,6 @@ def analyze_test():
                     product_count = max(product_count, product_index + 1)
                     product_images_count += 1
         
-        # Получаем параметры анализа
         threshold = float(request.form.get('threshold', 0.85))
         sample_rate = int(request.form.get('sample_rate', 10))
         
@@ -537,30 +462,24 @@ def analyze_test():
 
 @app.route('/api/<path:path>', methods=['GET', 'POST', 'OPTIONS'])
 def api_fallback(path):
-    # Выводим информацию о попытке доступа к API
     logger.warning(f"Попытка доступа к неизвестному API эндпоинту: {request.method} /api/{path}")
     return jsonify({'error': 'API эндпоинт не найден'}), 404
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    # Игнорируем запросы к /api
     if path.startswith('api/'):
         return jsonify({'error': 'Неверный путь API'}), 404
     
-    # Проверяем, есть ли файл в статической директории
     static_file = os.path.join(app.static_folder, path)
     if os.path.isfile(static_file):
         return send_from_directory(app.static_folder, path)
     
-    # Если файл не найден, возвращаем index.html для SPA
     return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == "__main__":
-    # Проверяем наличие модели перед запуском
     if not os.path.exists(MODEL_PATH):
         logger.warning(f"Модель не найдена по пути {MODEL_PATH}. Некоторые функции будут недоступны.")
         print(f"ВНИМАНИЕ: Модель не найдена. Пожалуйста, убедитесь, что файл модели доступен по пути: {MODEL_PATH}")
     
-    # Запускаем приложение
     app.run(host='0.0.0.0', port=5000, debug=True)
