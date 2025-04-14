@@ -15,7 +15,7 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({
   accept,
-  maxSize = 100 * 1024 * 1024, // 100MB default
+  maxSize = 100 * 1024 * 1024, 
   multiple = false,
   onFileSelect,
   fileType,
@@ -28,7 +28,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-    // Обработка отклоненных файлов
+ 
     if (rejectedFiles.length > 0) {
       const rejection = rejectedFiles[0];
       if (rejection.errors[0].code === 'file-too-large') {
@@ -45,7 +45,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setError(null);
       onFileSelect(acceptedFiles);
       
-      // Создаем превью для первого файла
       if (fileType === 'image' && acceptedFiles[0]) {
         const url = URL.createObjectURL(acceptedFiles[0]);
         setPreview(url);
