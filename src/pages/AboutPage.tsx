@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 const AboutPage: React.FC = () => {
   return (
     <div>
-      {/* Шапка страницы */}
       <section className="wb-gradient-bg py-16 md:py-24 text-white">
         <div className="wb-container">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">О проекте</h1>
@@ -14,7 +13,6 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Основная информация */}
       <section className="py-16 bg-white">
         <div className="wb-container">
           <div className="max-w-4xl mx-auto">
@@ -109,7 +107,6 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Призыв к действию */}
       <section className="wb-gradient-bg py-16 text-white text-center">
         <div className="wb-container">
           <h2 className="text-3xl font-bold mb-6">Попробуйте сами!</h2>
