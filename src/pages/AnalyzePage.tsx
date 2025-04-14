@@ -22,7 +22,6 @@ const AnalyzePage: React.FC = () => {
   const [modelAvailable, setModelAvailable] = useState<boolean>(true);
   const [modelMessage, setModelMessage] = useState<string | null>(null);
 
-  // Проверка наличия модели при загрузке страницы
   useEffect(() => {
     const checkModel = async () => {
       try {
@@ -83,13 +82,11 @@ const AnalyzePage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    // Проверки
     if (!videoFile) {
       setError('Пожалуйста, загрузите видео для анализа');
       return;
     }
 
-    // Проверка, что все товары имеют хотя бы одно изображение
     const emptyProducts = products.filter(product => product.files.length === 0);
     if (emptyProducts.length > 0) {
       setError(`Пожалуйста, загрузите изображения для товара ${emptyProducts[0].id + 1}`);
@@ -99,16 +96,13 @@ const AnalyzePage: React.FC = () => {
     try {
       setIsAnalyzing(true);
 
-      // Преобразование массива продуктов в требуемый формат
       const productImagesMap: { [key: string]: File[] } = {};
       products.forEach(product => {
         productImagesMap[product.id] = product.files;
       });
 
-      // Отправка запроса на анализ
       const result = await analyzeVideo(videoFile, productImagesMap, threshold, sampleRate);
-      
-      // Переход на страницу результатов
+    
       navigate(`/results/${result.analysisId}`);
     } catch (error) {
       console.error('Ошибка при анализе:', error);
@@ -152,7 +146,6 @@ const AnalyzePage: React.FC = () => {
 
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
           <form onSubmit={handleSubmit}>
-            {/* Видео */}
             <div className="mb-8">
               <h2 className="text-xl font-bold text-wb-text mb-4">Загрузка видео</h2>
               <FileUpload
@@ -164,7 +157,6 @@ const AnalyzePage: React.FC = () => {
               />
             </div>
 
-            {/* Товары */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-wb-text">Изображения товаров</h2>
@@ -209,7 +201,6 @@ const AnalyzePage: React.FC = () => {
                       isUploading={isAnalyzing}
                     />
 
-                    {/* Предварительный просмотр загруженных изображений */}
                     {product.files.length > 0 && (
                       <div className="mt-4">
                         <h4 className="text-sm font-medium text-wb-text mb-2">Загруженные изображения ({product.files.length})</h4>
@@ -239,7 +230,6 @@ const AnalyzePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Параметры анализа */}
             <div className="mb-8">
               <h2 className="text-xl font-bold text-wb-text mb-4">Параметры анализа</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -285,14 +275,12 @@ const AnalyzePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Ошибка */}
             {error && (
               <div className="mb-6 text-red-500 bg-red-50 p-3 rounded-md">
                 {error}
               </div>
             )}
 
-            {/* Кнопка отправки */}
             <div className="flex justify-center">
               <button
                 type="submit"
@@ -305,7 +293,6 @@ const AnalyzePage: React.FC = () => {
           </form>
         </div>
 
-        {/* Индикатор загрузки */}
         {isAnalyzing && (
           <div className="mt-8">
             <LoadingIndicator message="Идет анализ видео..." />
