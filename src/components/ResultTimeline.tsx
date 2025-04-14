@@ -17,13 +17,10 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
 }) => {
   const theme = useTheme();
 
-  // Преобразуем таймлайн в данные для отрисовки
   const timelineData = useMemo(() => {
-    // Если данных нет, возвращаем пустой массив
     if (!timeline.length || !videoDuration) return [];
 
-    // Масштабируем таймлайн по длительности видео
-    const totalPoints = Math.min(300, timeline.length); // Ограничиваем макс. количество точек
+    const totalPoints = Math.min(300, timeline.length); 
     const step = timeline.length / totalPoints;
     
     const points: { x: number; y: number; original: TimelinePoint }[] = [];
@@ -34,7 +31,7 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
       
       if (point) {
         points.push({
-          x: (point.timestamp / videoDuration) * 100, // В процентах от ширины
+          x: (point.timestamp / videoDuration) * 100, 
           y: point.similarity,
           original: point,
         });
@@ -44,7 +41,6 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
     return points;
   }, [timeline, videoDuration]);
 
-  // Форматирование времени
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
@@ -68,7 +64,6 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
           overflow: 'hidden',
         }}
       >
-        {/* Линия порога */}
         <Box
           sx={{
             position: 'absolute',
@@ -79,8 +74,7 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
             zIndex: 2,
           }}
         />
-        
-        {/* Линия таймлайна */}
+
         <svg
           width="100%"
           height="100%"
@@ -96,7 +90,6 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
           />
         </svg>
         
-        {/* Точки таймлайна */}
         {timelineData
           .filter(point => point.y >= threshold)
           .map((point, index) => (
@@ -124,8 +117,7 @@ const ResultTimeline: React.FC<ResultTimelineProps> = ({
               title={`Время: ${formatTime(point.original.timestamp)}, Совпадение: ${Math.round(point.original.similarity * 100)}%`}
             />
           ))}
-        
-        {/* Временные метки */}
+       
         {[0, 25, 50, 75, 100].map(percent => (
           <Typography
             key={percent}
