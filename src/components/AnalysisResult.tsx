@@ -32,22 +32,17 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
 }) => {
   const [selectedMatchIndex, setSelectedMatchIndex] = useState<number | null>(null);
 
-  // Получаем общее количество совпадений
   const totalMatches = result.matches.length;
   
-  // Количество товаров с совпадениями
   const matchedProducts = new Set(result.matches.map(m => m.productId)).size;
   
-  // Средний процент совпадения
   const avgSimilarity = result.matches.reduce((sum, match) => sum + match.similarity, 0) / 
     (totalMatches || 1);
   
-  // Обрабатываем клик по временной метке в таймлайне
   const handleTimeClick = (timestamp: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = timestamp;
       
-      // Находим индекс совпадения
       const matchIndex = result.matches.findIndex(
         match => Math.abs(match.timestamp - timestamp) < 0.5
       );
@@ -58,11 +53,9 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
     }
   };
 
-  // Группируем продукты по ID для таблицы
   const productGroups = React.useMemo(() => {
     const groups: Record<string, ProductResult & { matchCount: number, avgSimilarity: number }> = {};
     
-    // Создаем группы товаров
     result.products.forEach(product => {
       groups[product.id] = {
         ...product,
@@ -71,7 +64,6 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
       };
     });
     
-    // Считаем совпадения для каждого товара
     result.matches.forEach(match => {
       if (groups[match.productId]) {
         groups[match.productId].matchCount += 1;
@@ -79,7 +71,6 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
       }
     });
     
-    // Вычисляем средний процент совпадения
     Object.keys(groups).forEach(key => {
       if (groups[key].matchCount > 0) {
         groups[key].avgSimilarity = groups[key].avgSimilarity / groups[key].matchCount;
@@ -87,10 +78,9 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
     });
     
     return Object.values(groups)
-      .sort((a, b) => b.matchCount - a.matchCount); // Сортируем по количеству совпадений
+      .sort((a, b) => b.matchCount - a.matchCount); 
   }, [result]);
 
-  // Формируем временную шкалу для графика
   const timeline = React.useMemo(() => {
     return result.timeline || [];
   }, [result]);
@@ -143,7 +133,6 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
             </Grid>
           </Grid>
           
-          {/* Отображаем таймлайн */}
           {timeline.length > 0 && videoRef.current && (
             <ResultTimeline
               timeline={timeline}
@@ -153,7 +142,6 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
             />
           )}
           
-          {/* Выбранное совпадение */}
           {selectedMatchIndex !== null && (
             <Card variant="outlined" sx={{ mb: 3, bgcolor: 'rgba(66, 165, 245, 0.1)' }}>
               <CardContent>
@@ -182,7 +170,6 @@ const AnalysisResultComponent: React.FC<AnalysisResultProps> = ({
             </Card>
           )}
           
-          {/* Таблица товаров */}
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Список товаров и совпадений
           </Typography>
