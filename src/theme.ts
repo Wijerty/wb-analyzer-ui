@@ -1,19 +1,17 @@
 import { createTheme } from '@mui/material/styles';
 
-// Цвета Wildberries
 const wildberriesColors = {
-  primary: '#cb11ab', // Основной пурпурный цвет Wildberries
-  secondary: '#8126b3', // Более темный пурпурный
-  dark: '#4b0079', // Очень темный пурпурный
-  light: '#faeaf5', // Светлый пурпурный фон
-  darkGrey: '#333333', // Цвет текста
-  midGrey: '#757575', // Цвет вторичного текста
-  lightGrey: '#f6f6f6', // Светло-серый фон
-  danger: '#ff2c4c', // Цвет ошибки/опасности
-  success: '#2aad27', // Цвет успеха
+  primary: '#cb11ab', 
+  secondary: '#8126b3', 
+  dark: '#4b0079', 
+  light: '#faeaf5', 
+  darkGrey: '#333333',
+  midGrey: '#757575', 
+  lightGrey: '#f6f6f6', 
+  danger: '#ff2c4c', 
+  success: '#2aad27', 
 };
 
-// Создаем тему
 const theme = createTheme({
   palette: {
     primary: {
