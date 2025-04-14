@@ -1,31 +1,59 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import Header from './components/Header';
-import Footer from './components/Footer';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import HomePage from './pages/HomePage';
-import AnalyzePage from './pages/AnalyzePage';
-import ResultsPage from './pages/ResultsPage';
-import AboutPage from './pages/AboutPage';
+
+// Создаем базовую тему для приложения
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+});
 
 function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/analyze" element={<AnalyzePage />} />
-            <Route path="/results/:id" element={<ResultsPage />} />
-            <Route path="/about" element={<AboutPage />} />
-          </Routes>
-        </main>
-        
-        <Footer />
-      </div>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <HomePage />
+    </ThemeProvider>
   );
 }
 
