@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import AnalysisResult from './AnalysisResult';
 
-// Мок данных для теста
 const mockAnalysis = {
   id: 'test-id-123',
   videoUrl: 'https://example.com/video.mp4',
@@ -26,12 +25,10 @@ describe('AnalysisResult', () => {
   test('renders analysis result component correctly', () => {
     render(<AnalysisResult analysis={mockAnalysis} />);
     
-    // Проверяем, что основные элементы отображаются
     expect(screen.getByText('Результаты анализа')).toBeInTheDocument();
     expect(screen.getByText('Всего совпадений:')).toBeInTheDocument();
     expect(screen.getByText('Продуктов найдено:')).toBeInTheDocument();
     
-    // Проверяем, что данные о продуктах отображаются
     expect(screen.getByText('Продукт 1')).toBeInTheDocument();
     expect(screen.getByText('Продукт 2')).toBeInTheDocument();
   });
@@ -39,7 +36,6 @@ describe('AnalysisResult', () => {
   test('calculates statistics correctly', () => {
     render(<AnalysisResult analysis={mockAnalysis} />);
     
-    // Проверяем расчет статистики
     expect(screen.getByText('Всего совпадений: 3')).toBeInTheDocument();
     expect(screen.getByText('Продуктов найдено: 2')).toBeInTheDocument();
   });
