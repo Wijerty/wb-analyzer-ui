@@ -34,8 +34,6 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onViewAnalysis }) => {
     try {
       setLoading(true);
       const data = await apiService.getAnalyses();
-      
-      // Сортируем по времени создания (новые сверху)
       const sortedData = [...data].sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -53,7 +51,6 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onViewAnalysis }) => {
   useEffect(() => {
     fetchAnalyses();
     
-    // Обновляем список каждые 10 секунд для отслеживания прогресса
     const interval = setInterval(() => {
       fetchAnalyses();
     }, 10000);
