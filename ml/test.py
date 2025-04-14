@@ -324,7 +324,6 @@ class ObjectDetector:
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        # Создаем сводный отчет
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write("# Отчет по анализу видео на наличие товаров\n\n")
             f.write(f"Дата анализа: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -370,7 +369,6 @@ class ObjectDetector:
 
             print(f"График для товара {product_id} сохранен в {chart_path}")
 
-        # Создаем сводный график
         self._create_combined_chart(video_path, product_images, output_dir, threshold, sample_rate)
 
     def _create_combined_chart(self, video_path, product_images, output_dir, threshold=0.85, sample_rate=10):
