@@ -65,7 +65,7 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setVideoFile(file);
-      setVideoUrl(''); // Сбрасываем URL при выборе файла
+      setVideoUrl(''); 
     }
   };
 
@@ -118,7 +118,6 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
         
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
-            {/* Секция загрузки видео */}
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Видео для анализа
@@ -133,7 +132,7 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
                     value={videoUrl}
                     onChange={(e) => {
                       setVideoUrl(e.target.value);
-                      setVideoFile(null); // Сбрасываем файл при вводе URL
+                      setVideoFile(null);
                     }}
                     disabled={!!videoFile || isLoading}
                   />
@@ -162,7 +161,6 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
               </Grid>
             </Grid>
             
-            {/* Секция поиска и выбора товаров */}
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Товары для поиска
@@ -173,7 +171,7 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
                 options={searchResults}
                 loading={isSearching}
                 getOptionLabel={(option) => `${option.name} (ID: ${option.id})`}
-                filterOptions={(x) => x} // Отключаем стандартную фильтрацию
+                filterOptions={(x) => x} 
                 onChange={(_, value) => handleProductSelect(value)}
                 value={null}
                 renderInput={(params) => (
@@ -214,7 +212,6 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
               </Box>
             </Grid>
             
-            {/* Настройки порога сходства */}
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Настройки анализа
@@ -238,7 +235,6 @@ const NewAnalysisForm: React.FC<NewAnalysisFormProps> = ({ onAnalysisCreated }) 
               </Typography>
             </Grid>
             
-            {/* Ошибки и кнопка отправки */}
             {error && (
               <Grid item xs={12}>
                 <Typography color="error">{error}</Typography>
