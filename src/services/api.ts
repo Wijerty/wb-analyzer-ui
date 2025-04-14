@@ -1,133 +1,112 @@
 import axios from 'axios';
 
-// API URL из переменных окружения или по умолчанию
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// API URL из переменной окружения или по умолчанию
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-// HTTP клиент
-const apiClient = axios.create({
+// Создаем экземпляр axios с базовым URL
+const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-  },
+  }
 });
 
-// Типы данных API
-
-export interface AvailabilityResponse {
-  available: boolean;
-  message?: string;
-}
-
-export interface AnalysisRequest {
-  video: File;
-  products: File[];
-  threshold: number;
-  sampleRate: number;
-}
-
-export interface AnalysisResponse {
-  id: string;
-  status: 'created' | 'processing';
-  message?: string;
-}
-
-export interface TimelinePoint {
-  timestamp: number;
-  similarity: number;
-}
-
+// Типы данных для работы с API
 export interface MatchResult {
   timestamp: number;
+  productId: string;
   similarity: number;
-  imageUrl: string;
 }
 
 export interface ProductResult {
-  productImageUrl: string;
-  totalMatches: number;
-  timeline: TimelinePoint[];
-  matches: MatchResult[];
+  id: string;
+  name: string;
+  imageUrl?: string;
+  url?: string;
 }
 
 export interface AnalysisResult {
   id: string;
-  status: 'processing' | 'completed' | 'failed' | 'canceled';
-  progress?: number;
-  videoDuration?: number;
-  threshold?: number;
-  sampleRate?: number;
+  videoUrl: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: string;
+  completedAt?: string;
   errorMessage?: string;
-  products?: ProductResult[];
+  matches: MatchResult[];
+  products: ProductResult[];
+  timeline: number[];
+  threshold: number;
 }
 
-// API функции
+export interface AnalysisRequest {
+  videoUrl: string;
+  productIds: string[];
+  threshold?: number;
+}
 
-/**
- * Проверка доступности модели для анализа
- */
-export const checkModelAvailability = async (): Promise<AvailabilityResponse> => {
-  try {
-    const response = await apiClient.get('/model/status');
+// API методы
+const apiService = {
+  // Получить список всех анализов
+  getAnalyses: async (): Promise<AnalysisResult[]> => {
+    const response = await api.get('/analyses');
     return response.data;
-  } catch (error) {
-    console.error('Error checking model availability:', error);
-    return {
-      available: false,
-      message: 'Не удалось проверить доступность модели',
-    };
+  },
+
+  // Получить конкретный анализ по ID
+  getAnalysis: async (id: string): Promise<AnalysisResult> => {
+    const response = await api.get(`/analyses/${id}`);
+    return response.data;
+  },
+
+  // Создать новый анализ
+  createAnalysis: async (data: AnalysisRequest): Promise<AnalysisResult> => {
+    const response = await api.post('/analyses', data);
+    return response.data;
+  },
+
+  // Загрузить видео и создать анализ
+  uploadVideoAndAnalyze: async (videoFile: File, productIds: string[], threshold?: number): Promise<AnalysisResult> => {
+    const formData = new FormData();
+    formData.append('video', videoFile);
+    formData.append('productIds', JSON.stringify(productIds));
+    
+    if (threshold) {
+      formData.append('threshold', threshold.toString());
+    }
+
+    const response = await api.post('/analyses/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data;
+  },
+
+  // Отменить анализ
+  cancelAnalysis: async (id: string): Promise<void> => {
+    await api.post(`/analyses/${id}/cancel`);
+  },
+
+  // Поиск товаров на Wildberries
+  searchProducts: async (query: string): Promise<ProductResult[]> => {
+    const response = await api.get('/products/search', {
+      params: { query }
+    });
+    return response.data;
+  },
+
+  // Получить конкретный товар по ID
+  getProduct: async (id: string): Promise<ProductResult> => {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  },
+
+  // Получить несколько товаров по ID
+  getProductsByIds: async (ids: string[]): Promise<ProductResult[]> => {
+    const response = await api.post('/products/batch', { ids });
+    return response.data;
   }
 };
 
-/**
- * Отправка запроса на анализ видео
- */
-export const submitVideoAnalysis = async (data: AnalysisRequest): Promise<AnalysisResponse> => {
-  const formData = new FormData();
-  formData.append('video', data.video);
-  
-  data.products.forEach((product, index) => {
-    formData.append('products', product);
-  });
-  
-  formData.append('threshold', data.threshold.toString());
-  formData.append('sampleRate', data.sampleRate.toString());
-  
-  const response = await apiClient.post('/analysis', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-  
-  return response.data;
-};
-
-/**
- * Получение результатов анализа
- */
-export const getAnalysisResult = async (id: string): Promise<AnalysisResult> => {
-  const response = await apiClient.get(`/analysis/${id}/result`);
-  return response.data;
-};
-
-/**
- * Отмена анализа
- */
-export const cancelAnalysis = async (id: string): Promise<void> => {
-  await apiClient.post(`/analysis/${id}/cancel`);
-};
-
-/**
- * Получение списка всех анализов
- */
-export const getAnalysisList = async (): Promise<AnalysisResult[]> => {
-  const response = await apiClient.get('/analysis');
-  return response.data;
-};
-
-export default {
-  checkModelAvailability,
-  submitVideoAnalysis,
-  getAnalysisResult,
-  cancelAnalysis,
-  getAnalysisList,
-};
+export default apiService;
