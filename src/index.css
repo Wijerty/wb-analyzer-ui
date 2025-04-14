@@ -4,7 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Базовые стили */
 body {
   font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -26,7 +25,6 @@ code {
     monospace;
 }
 
-/* Компоненты в стиле Wildberries */
 @layer components {
   .wb-button {
     @apply bg-wb-purple text-white py-2 px-6 rounded font-medium 
@@ -66,7 +64,6 @@ code {
   }
 }
 
-/* Стили для специфических элементов */
 .navbar-brand {
   font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   @apply font-medium;
@@ -84,7 +81,6 @@ code {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* Добавляю глобальный плавный скроллинг */
 html {
   scroll-behavior: smooth;
 }
