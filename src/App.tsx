@@ -2,7 +2,6 @@ import React from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import HomePage from './pages/HomePage';
 
-// Создаем базовую тему для приложения
 const theme = createTheme({
   palette: {
     primary: {
