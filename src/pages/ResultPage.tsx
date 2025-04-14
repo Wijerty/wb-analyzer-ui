@@ -21,7 +21,6 @@ const ResultPage: React.FC = () => {
         const data = await getAnalysisResult(id);
         setResult(data);
         
-        // Выбрать первый продукт по умолчанию, если есть результаты
         if (data.products && data.products.length > 0) {
           setSelectedProduct(0);
         }
@@ -36,16 +35,12 @@ const ResultPage: React.FC = () => {
         setLoading(false);
       }
     };
-
-    // Периодически проверять результаты, если анализ еще не завершен
     const intervalId = setInterval(() => {
       fetchResult();
     }, 3000);
 
-    // Начальная загрузка
     fetchResult();
 
-    // Очистка интервала при размонтировании
     return () => clearInterval(intervalId);
   }, [id]);
 
@@ -54,7 +49,6 @@ const ResultPage: React.FC = () => {
     try {
       setIsCanceling(true);
       await cancelAnalysis(id);
-      // Обновить данные после отмены
       const updatedResult = await getAnalysisResult(id);
       setResult(updatedResult);
     } catch (error) {
@@ -134,7 +128,6 @@ const ResultPage: React.FC = () => {
         </div>
       );
     } else {
-      // Статус "processing"
       return (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-6">
           <div className="flex items-center justify-between">
@@ -172,27 +165,22 @@ const ResultPage: React.FC = () => {
         </div>
       );
     }
-
-    // Найти максимальное сходство для нормализации высоты графика
     const maxSimilarity = Math.max(...product.timeline.map(item => item.similarity));
 
     return (
       <div className="mt-4">
         <div className="relative h-40">
-          {/* Горизонтальные линии сетки */}
           <div className="absolute inset-0 border-b border-gray-200"></div>
           <div className="absolute inset-0 h-1/4 border-b border-gray-200"></div>
           <div className="absolute inset-0 h-2/4 border-b border-gray-200"></div>
           <div className="absolute inset-0 h-3/4 border-b border-gray-200"></div>
 
-          {/* Метки процентов */}
           <div className="absolute left-0 top-0 -translate-y-1/2 text-xs text-gray-500">100%</div>
           <div className="absolute left-0 top-1/4 -translate-y-1/2 text-xs text-gray-500">75%</div>
           <div className="absolute left-0 top-2/4 -translate-y-1/2 text-xs text-gray-500">50%</div>
           <div className="absolute left-0 top-3/4 -translate-y-1/2 text-xs text-gray-500">25%</div>
           <div className="absolute left-0 bottom-0 -translate-y-1/2 text-xs text-gray-500">0%</div>
 
-          {/* График */}
           <div className="absolute inset-0 flex items-end">
             {product.timeline.map((point, index) => {
               const normalizedHeight = (point.similarity / maxSimilarity) * 100;
@@ -205,7 +193,6 @@ const ResultPage: React.FC = () => {
                     style={{ height: barHeight }}
                     title={`${formatTime(point.timestamp)}: ${formatPercentage(point.similarity)}`}
                   ></div>
-                  {/* Отображаем метку времени для каждой 10-й точки или если мало точек */}
                   {(index % 10 === 0 || product.timeline.length < 20) && (
                     <div className="text-xs text-gray-500 mt-1">{formatTime(point.timestamp)}</div>
                   )}
@@ -300,10 +287,8 @@ const ResultPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Статус анализа */}
         {renderStatus()}
 
-        {/* Информация о видео */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold text-wb-text mb-3">Информация о видео</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -322,7 +307,6 @@ const ResultPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Нет результатов для отображения */}
         {(!result.products || result.products.length === 0) && (
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
             <p className="text-lg text-wb-text mb-4">
@@ -332,11 +316,8 @@ const ResultPage: React.FC = () => {
             </p>
           </div>
         )}
-
-        {/* Вкладки продуктов */}
         {result.products && result.products.length > 0 && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Вкладки продуктов */}
             <div className="flex overflow-x-auto border-b border-gray-200">
               {result.products.map((product, index) => (
                 <button
@@ -357,8 +338,6 @@ const ResultPage: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            {/* Содержимое выбранного продукта */}
             {selectedProduct !== null && (
               <div className="p-6">
                 <div className="flex items-center mb-6">
@@ -379,7 +358,6 @@ const ResultPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Вкладки для просмотра */}
                 <div className="border-b border-gray-200 mb-4">
                   <div className="flex">
                     <button
@@ -404,8 +382,7 @@ const ResultPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
-
-                {/* Содержимое активной вкладки */}
+                
                 {activeTab === 'timeline' ? (
                   renderTimeline(result.products[selectedProduct])
                 ) : (
