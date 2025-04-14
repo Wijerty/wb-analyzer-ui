@@ -5,14 +5,12 @@ import AnalysisList from '../components/AnalysisList';
 import AnalysisResult from '../components/AnalysisResult';
 import apiService, { AnalysisResult as AnalysisResultType } from '../services/api';
 
-// Интерфейс для состояния табов
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
 
-// Компонент для содержимого таба
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
@@ -33,7 +31,6 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Функция для генерации свойств aria-* для табов
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
@@ -42,21 +39,17 @@ function a11yProps(index: number) {
 }
 
 const HomePage: React.FC = () => {
-  // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
   
-  // Состояние для просмотра результатов анализа
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResultType | null>(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
 
-  // Обработчик смены табов
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // Функция для загрузки данных анализа по ID
   const fetchAnalysisDetails = async (id: string) => {
     try {
       setLoadingAnalysis(true);
@@ -65,7 +58,6 @@ const HomePage: React.FC = () => {
       const analysis = await apiService.getAnalysis(id);
       setSelectedAnalysis(analysis);
       
-      // Переключаемся на вкладку с результатами
       setTabValue(2);
     } catch (err) {
       console.error('Error fetching analysis details:', err);
@@ -76,20 +68,17 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Обработчик события создания нового анализа
   const handleAnalysisCreated = (analysisId: string) => {
     setSelectedAnalysisId(analysisId);
-    // Переключаемся на вкладку со списком
+
     setTabValue(1);
   };
 
-  // Обработчик просмотра анализа из списка
   const handleViewAnalysis = (analysisId: string) => {
     setSelectedAnalysisId(analysisId);
     fetchAnalysisDetails(analysisId);
   };
 
-  // Загружаем детали анализа при изменении selectedAnalysisId
   useEffect(() => {
     if (selectedAnalysisId) {
       fetchAnalysisDetails(selectedAnalysisId);
